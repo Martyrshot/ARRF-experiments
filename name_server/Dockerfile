@@ -4,7 +4,7 @@ RUN apt upgrade -y
 RUN apt update -y
 RUN DEBIAN_FRONTEND="noninteractive" TZ="Canada/Toronto" apt install ssh vim git pkg-config autoconf automake build-essential libnghttp2-dev libtool libtool-bin libuv1-dev libcap-dev libssl-dev iproute2 -y
 RUN DEBIAN_FRONTEND="noninteractive" TZ="Canada/Toronto" apt install astyle cmake gcc ninja-build libssl-dev python3-pytest python3-pytest-xdist unzip xsltproc doxygen graphviz -y
-RUN git clone --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git /oqs-openssl-source
+RUN git clone --branch OQS-OpenSSL_1_1_1-stable https://github.com/Martyrshot/openssl.git /oqs-openssl-source
 RUN git clone https://github.com/open-quantum-safe/liboqs.git
 RUN mkdir liboqs/build
 RUN cd liboqs/build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/oqs-openssl-source/oqs ..
