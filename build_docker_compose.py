@@ -171,8 +171,8 @@ for name_server in ns_data:
     docker_file.write("COPY db." + zone + " /usr/local/etc/bind/zones\n")
     if zone == "root":
         zone = "."
-    docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a RSASHA256 -b 1024 -n ZONE " + zone + "\n")
-    docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a RSASHA256 -b 1024 -n ZONE -f KSK " + zone + "\n")
+    docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a FALCON512 -b 1024 -n ZONE " + zone + "\n")
+    docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a FALCON512 -b 1024 -n ZONE -f KSK " + zone + "\n")
     if name_server["leaf"] == "true":
         if zone == ".":
             zone = "root"
