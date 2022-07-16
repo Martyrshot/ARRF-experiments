@@ -17,7 +17,7 @@ RUN cd liboqs/build && ninja install
 RUN cd oqs-openssl-source && ./Configure no-shared linux-aarch64 --prefix=/oqs-openssl -lm
 RUN cd oqs-openssl-source && make
 RUN cd oqs-openssl-source && make install
-RUN git clone https://github.com/Martyrshot/OQS-bind.git /bind9
+RUN git clone --branch larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
 ENV LD_LIBRARY_PATH=/usr/local/lib
 RUN cd bind9/ && autoreconf -fi
 RUN cd bind9/ && ./configure CFLAGS="-Wl,--no-as-needed" LIBS="-loqs -ldl" CPPFLAGS="-I/oqs-openssl-source/oqs/include" LDFLAGS="-L/oqs-openssl/lib -L/oqs-openssl-source/oqs/lib" --with-openssl=/oqs-openssl;
@@ -53,9 +53,9 @@ WORKDIR /
 #RUN cd /usr/local/etc/bind/zones && dnssec-signzone -o goertzen -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.goertzen
 #CMD /bin/bash # arguments will need to be hard coded with the parse script here
 COPY db.root /usr/local/etc/bind/zones
-RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a FALCON512 -n ZONE .
-RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a FALCON512 -n ZONE -f KSK .
+RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a DILITHIUM2 -n ZONE .
+RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a DILITHIUM2 -n ZONE -f KSK .
 RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN
-CMD cd /usr/local/etc/bind/zones && /setup_files/add_ds.bash db.root goertzen. && if [ ! -f /usr/local/etc/bind/zones/db.root.signed ]; then dnssec-signzone -o . -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.root;fi && /setup_files/move_ds.bash . && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 128 & named -g -d 3
+CMD cd /usr/local/etc/bind/zones && /setup_files/add_ds.bash db.root goertzen. && if [ ! -f /usr/local/etc/bind/zones/db.root.signed ]; then dnssec-signzone -o . -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.root;fi && /setup_files/move_ds.bash . && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 1232 & named -g -d 3
