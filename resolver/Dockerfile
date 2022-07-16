@@ -1,4 +1,9 @@
 FROM ubuntu:20.04
+
+ARG LISTENIP
+
+# Setting up bind
+
 RUN apt update -y
 RUN apt upgrade -y
 RUN apt update -y
@@ -10,7 +15,7 @@ RUN mkdir liboqs/build
 RUN cd liboqs/build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/oqs-openssl-source/oqs ..
 RUN cd liboqs/build && ninja
 RUN cd liboqs/build && ninja install
-RUN cd oqs-openssl-source && ./Configure no-shared linux-x86_64 --prefix=/oqs-openssl -lm
+RUN cd oqs-openssl-source && ./Configure no-shared linux-aarch64 --prefix=/oqs-openssl -lm
 RUN cd oqs-openssl-source && make
 RUN cd oqs-openssl-source && make install
 RUN git clone https://github.com/Martyrshot/OQS-bind.git /bind9
@@ -26,4 +31,18 @@ RUN mkdir /setup_files/
 COPY install_trust_anchor.bash /setup_files/
 COPY named.conf /usr/local/etc
 COPY root.hints /usr/local/etc/bind/root/hints/root.hints
-CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && named && /bin/bash
+
+# Setting up daemon
+RUN apt update
+RUN apt install iptables iputils-ping iperf gcc make net-tools iproute2 libnetfilter-queue-dev netcat traceroute vim -y
+RUN apt install git libtool libnl-3-dev libnl-genl-3-dev binutils-dev libreadline6-dev autoconf libpcap-dev -y
+
+COPY ./rrfrag/src /rrfrag/src
+COPY ./rrfrag/include /rrfrag/include
+COPY ./rrfrag/c-hashmap /rrfrag/c-hashmap
+COPY ./rrfrag/makefile /rrfrag/makefile
+WORKDIR /rrfrag
+RUN make daemon
+ENV LISTENIP=${LISTENIP}
+WORKDIR /
+#CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --is_resolver & named -g -d 3
