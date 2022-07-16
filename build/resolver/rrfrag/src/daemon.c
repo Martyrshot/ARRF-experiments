@@ -60,7 +60,7 @@ ERROR(void) {
 
 // TODO need to be able to parse opt RRs to get udp max size. >=(
 
-#define BLOCKSIZE 1
+#define BLOCKSIZE 128
 
 #define BLOCKRECVD 0
 #define BLOCKFREE -1
