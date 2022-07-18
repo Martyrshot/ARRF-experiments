@@ -17,8 +17,7 @@ RUN cd liboqs/build && ninja install
 RUN cd oqs-openssl-source && ./Configure no-shared linux-aarch64 --prefix=/oqs-openssl -lm
 RUN cd oqs-openssl-source && make
 RUN cd oqs-openssl-source && make install
-ARG REBUILD unknown
-RUN git clone --branch larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
+RUN git clone --branch even-larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
 ENV LD_LIBRARY_PATH=/usr/local/lib
 RUN cd bind9/ && autoreconf -fi
 RUN cd bind9/ && ./configure CFLAGS="-Wl,--no-as-needed" LIBS="-loqs -ldl" CPPFLAGS="-I/oqs-openssl-source/oqs/include" LDFLAGS="-L/oqs-openssl/lib -L/oqs-openssl-source/oqs/lib" --with-openssl=/oqs-openssl;
@@ -54,8 +53,8 @@ WORKDIR /
 #RUN cd /usr/local/etc/bind/zones && dnssec-signzone -o goertzen -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.goertzen
 #CMD /bin/bash # arguments will need to be hard coded with the parse script here
 COPY db.goertzen /usr/local/etc/bind/zones
-RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a DILITHIUM2 -n ZONE goertzen
-RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a DILITHIUM2 -n ZONE -f KSK goertzen
+RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a SPHINCS+-SHA256-128S -n ZONE goertzen
+RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a SPHINCS+-SHA256-128S -n ZONE -f KSK goertzen
 RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN

@@ -1332,7 +1332,6 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 
 	// Now figure out which RRs to convert into RRFrags until they fit under max_size (TODO or UDP advertised size)
 	
-	// TODO Should probably do this in order of largest to smallest RRs, but for now this is fine.
 	size_t cur_size = rrsize;
 	while (cur_size > max_size - DNSMESSAGEHEADER) {
 		printf("in cur_size loop insert_into_state_and_construct_map\n");
@@ -1446,6 +1445,7 @@ responding_thread_end(struct iphdr *iphdr, void *transport_hdr, bool is_tcp,
 	if (is_tcp) {
 		raw_socket_send(fd, msg_bytes, byte_len, iphdr->daddr, iphdr->saddr, ((struct tcphdr *)transport_hdr)->dest, ((struct tcphdr *)transport_hdr)->source, is_tcp);
 	} else {
+		assert(byte_len < MAXUDP);
 		raw_socket_send(fd, msg_bytes, byte_len, iphdr->daddr, iphdr->saddr, ((struct udphdr *)transport_hdr)->dest, ((struct udphdr *)transport_hdr)->source, is_tcp);
 
 	}
@@ -1500,8 +1500,8 @@ process_dns_message(struct nfq_q_handle *qh, uint32_t id, unsigned char *payload
 	printf("==========================\n");
 	fflush(stdout);
 	if (is_internal_packet(iphdr)) {
-		size_t outbuff_len = 16384;
-		unsigned char outbuff[outbuff_len]; // Just picking a large safe number for now
+		size_t outbuff_len = 65355; // Need to account for large messages because of SPHINCS+
+		unsigned char outbuff[outbuff_len];
 		uint64_t *question_hash_port = malloc(sizeof(uint64_t));
 		memset(question_hash_port, 0, sizeof(uint64_t));
 		if (msg->qdcount == 1) /* it should always be one */ {
