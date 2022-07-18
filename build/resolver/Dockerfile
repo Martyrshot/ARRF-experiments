@@ -18,7 +18,7 @@ RUN cd liboqs/build && ninja install
 RUN cd oqs-openssl-source && ./Configure no-shared linux-aarch64 --prefix=/oqs-openssl -lm
 RUN cd oqs-openssl-source && make
 RUN cd oqs-openssl-source && make install
-RUN git clone --branch larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
+RUN git clone --branch even-larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
 ENV LD_LIBRARY_PATH=/usr/local/lib
 RUN cd bind9/ && autoreconf -fi
 RUN cd bind9/ && ./configure CFLAGS="-Wl,--no-as-needed" LIBS="-loqs -ldl" CPPFLAGS="-I/oqs-openssl-source/oqs/include" LDFLAGS="-L/oqs-openssl/lib -L/oqs-openssl-source/oqs/lib" --with-openssl=/oqs-openssl;
@@ -46,4 +46,4 @@ RUN make daemon
 ENV LISTENIP=${LISTENIP}
 WORKDIR /
 #CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --is_resolver & named -g -d 3
-CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --maxudp 8192 --is_resolver & named -g -d 3
+CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --maxudp 1232 --is_resolver & named -g -d 3
