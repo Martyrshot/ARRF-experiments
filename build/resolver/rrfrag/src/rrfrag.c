@@ -171,7 +171,7 @@ int rrfrag_to_bytes(RRFrag *in, unsigned char **out, size_t *out_len) {
 	}	
 	*out_len += 1 + 2 + 2 + 4 + 4 + 2;
 	*out = bytes;
-	printf("!=!=!= outlen: %lu\n", *out_len);
+	//printf("!=!=!= outlen: %lu\n", *out_len);
 	return 0;
 }
 

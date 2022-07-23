@@ -59,4 +59,4 @@ RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN
 RUN cd /usr/local/etc/bind/zones && dnssec-signzone -o goertzen -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.goertzen
-CMD /setup_files/move_ds.bash goertzen. && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 1232 & named -d 3 && /bin/bash
+CMD /setup_files/move_ds.bash goertzen. && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --bypass & named -d 3 && /bin/bash

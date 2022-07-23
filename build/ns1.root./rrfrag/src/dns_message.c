@@ -253,7 +253,7 @@ dnsmessage_to_bytes(DNSMessage *in, unsigned char **out, size_t *out_len) {
 	uint16_t ancount;
 	uint16_t nscount;
 	uint16_t arcount;
-	uint16_t header_size = 12;
+	uint16_t header_size = DNSHEADERSIZE;
 	unsigned char **question_bytes = NULL;
 	size_t *question_byte_lens = NULL;
 	unsigned char **answer_bytes = NULL;
@@ -359,15 +359,20 @@ dnsmessage_to_bytes(DNSMessage *in, unsigned char **out, size_t *out_len) {
 	for (size_t i = 0; i < in->qdcount; i++) {
 		total_bytes_needed += question_byte_lens[i];
 	}
+	//printf("total_bytes_needed 1: %lu\n", total_bytes_needed);
 	for (size_t i = 0; i < in->ancount; i++) {
 		total_bytes_needed += answer_byte_lens[i];
 	}
+	//printf("total_bytes_needed 2: %lu\n", total_bytes_needed);
 	for (size_t i = 0; i < in->nscount; i++) {
 		total_bytes_needed += authoritative_byte_lens[i];
 	}
+	//printf("total_bytes_needed 3: %lu\n", total_bytes_needed);
 	for (size_t i = 0; i < in->arcount; i++) {
 		total_bytes_needed += additional_byte_lens[i];
+		printf("additional add: %lu\n", additional_byte_lens[i]);
 	}
+	//printf("total_bytes_needed 4: %lu\n", total_bytes_needed);
 	*out = malloc(sizeof(unsigned char) * total_bytes_needed);
 	if (*out == NULL) {
 		rc = -1;

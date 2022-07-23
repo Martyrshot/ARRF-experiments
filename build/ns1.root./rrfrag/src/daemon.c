@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <map.h>
 
-#define RRFRAGHEADER 14
+#define RRFRAGHEADER 15 // 14 for the fields, + 1 for the name
 #define RRHEADER 10
 #define DNSMESSAGEHEADER DNSHEADERSIZE
 uint32_t MAXUDP = 1232;
@@ -58,9 +58,8 @@ ERROR(void) {
 // the length of the byte string is at least
 // min(header_size) + qd_count * min(rr_size) + an_count * min(rr_size) + nscount * min(rr_size) + ar_count * min(rr_size)
 
-// TODO need to be able to parse opt RRs to get udp max size. >=(
 
-#define BLOCKSIZE 128
+#define BLOCKSIZE 32
 
 #define BLOCKRECVD 0
 #define BLOCKFREE -1
@@ -817,8 +816,8 @@ raw_socket_send(int fd, unsigned char *payload, size_t payload_len, uint32_t sad
 	}
 
 	if (sendto(fd, datagram, ntohs(iph->tot_len), 0, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-		printf("message size: %u\n", ntohs(iph->tot_len));
-		fflush(stdout);
+		//printf("message size: %u\n", ntohs(iph->tot_len));
+		//fflush(stdout);
 		perror("raw socket failed to send");
 		return false;
 	}
@@ -1006,7 +1005,6 @@ pack_section(PackedRR ***packed_rrfrags, PartialRR **section, uint16_t section_l
 		if (lastblocksize == 0) lastblocksize = BLOCKSIZE;
 
 		size_t canfit = MAXUDP - cursize;
-		printf("canfit: %lu; MAXUDP: %u; cursize: %u\n", canfit, MAXUDP, cursize);
 		size_t numblockscanfit = floor((float)canfit / BLOCKSIZE);
 		
 		if (numblockscanfit >= numblocks) {
@@ -1274,6 +1272,8 @@ insert_into_state(ResourceRecord *rr, uint16_t *rrids, size_t *rrcount, size_t *
 			printf("Failed to clone rr before inserting into hashtable\n");
 			ERROR();
 		}
+		//printf("adding hash to hashmap: %hu\n", *_hash);
+		//printf("adding rr to hashmap:\n%s\n", rr_to_string(rr));
 		hashmap_set(responder_cache.map, _hash, sizeof(uint16_t), (uintptr_t)crr);
 		rrids[_rrcount++] = hash;
 		//rrsizes[rrcount++] = rr_outlen;
@@ -1292,7 +1292,7 @@ insert_into_state(ResourceRecord *rr, uint16_t *rrids, size_t *rrcount, size_t *
 		}
 		uint16_t *_hash = malloc(sizeof(uint16_t));
 		*_hash = hash;
-		hashmap_set(responder_cache.map, &_hash, sizeof(uint16_t), (uintptr_t)rr);
+		hashmap_set(responder_cache.map, _hash, sizeof(uint16_t), (uintptr_t)rr);
 		rrids[_rrcount++] = hash;
 		//rrsizes[rrcount++] = rr_outlen;
 	}
@@ -1306,11 +1306,19 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 	size_t total_records = msg->ancount + msg->nscount + msg->arcount;
 	uint16_t *rrids = malloc(sizeof(uint16_t) * total_records);
 	size_t rrcount = 0;
-	size_t rrsize = DNSHEADERSIZE;
+	size_t rrsize = DNSMESSAGEHEADER;
 	//size_t rrsizes = malloc(sizeof(size_t) * total_records);
 
 	// We won't fragment questions since they are very small, but we must include them in
-	// responses
+	// responses, and must account for their size when calculating FRAGSIZEs
+	
+	for (int i = 0; i < msg->qdcount; i++) {
+		size_t q_len;
+		unsigned char *q_bytes;
+		question_to_bytes(msg->question_section[i], &q_bytes, &q_len);
+		free(q_bytes);
+		rrsize += q_len;
+	}
 	
 	// Answers
 	for (int i = 0; i < msg->ancount; i++) {
@@ -1330,13 +1338,13 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 		insert_into_state(rr, rrids, &rrcount, &rrsize);
 	}
 
-	// Now figure out which RRs to convert into RRFrags until they fit under max_size (TODO or UDP advertised size)
 	
 	size_t cur_size = rrsize;
+	//printf("pre look cur_size: %lu\n", cur_size);
 	while (cur_size > max_size - DNSMESSAGEHEADER) {
-		printf("in cur_size loop insert_into_state_and_construct_map\n");
-		printf("rrcount0 : %lu\n", rrcount);
-		fflush(stdout);
+		//printf("in cur_size loop insert_into_state_and_construct_map\n");
+		//printf("rrcount0 : %lu\n", rrcount);
+		//fflush(stdout);
 		size_t cur_max = 0;
 		//cur_size = rrsize;
 		//uint32_t hash = rrids[0];
@@ -1344,32 +1352,34 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 		ResourceRecord *rr;
 		size_t idx = 0;
 		for (int i = 0; i < rrcount; i++) {
-			hash = rrids[i];
-			printf("hash: %hu\n", hash);
-			fflush(stdout);
-			if (hash == 0) {
+			uint16_t cur_hash = rrids[i];
+			//printf("hash: %hu\n", cur_hash);
+			//fflush(stdout);
+			if (cur_hash == 0) {
 				continue;
 			}
-			printf("pre hashmap get\n");
-			fflush(stdout);
-			if (!hashmap_get(responder_cache.map, &hash, sizeof(uint16_t), (uintptr_t *)&rr)) {
+			//printf("pre hashmap get\n");
+			//fflush(stdout);
+			if (!hashmap_get(responder_cache.map, &cur_hash, sizeof(uint16_t), (uintptr_t *)&rr)) {
 				printf("RRID: %hu, type: %hu\n", hash, rr->type);
 				fflush(stdout);
 				assert("[ERROR]Couldn't find rr with that rrid" == false);
 			}
-			printf("post hashmap get\n");
-			fflush(stdout);
+			//printf("post hashmap get\n");
+			//fflush(stdout);
 			if (rr->rdsize > cur_max) {
 				cur_max = rr->rdsize;
-				//hash = rrids[i];
+				hash = cur_hash;
 				//size = rrsizes[i];
 				idx = i;
 			}
 		}
-		printf("post forloop\n");
-		fflush(stdout);
-		hash = rrids[idx];
+		//printf("post forloop\n");
+		//fflush(stdout);
+		//hash = rrids[idx];
 		if (!hashmap_get(responder_cache.map, &hash, sizeof(uint16_t), (uintptr_t *)&rr)){
+			printf("rrid: %hu\n", hash);
+			fflush(stdout);
 			assert("[ERROR]Couldn't find rr with that rrid" == false);
 		}
 		// mark rrfrag as compressed.
@@ -1377,13 +1387,13 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 		// TODO might be a bug here. Might end up adding an unneeded rrfrag
 		if ((cur_size - rr->rdsize) >= max_size - DNSMESSAGEHEADER) {
 			// make an rrfrag with fragsize 0
-			printf("in here\n");
-			fflush(stdout);
-
 			RRFrag *rrfrag;
 			unsigned char *bytes;
 			size_t out_len;
 			rr_to_bytes(rr, &bytes, &out_len);
+			//printf("Fragmenting:\n %s\n", rr_to_string(rr));
+			//printf("out_len: %lu\n", out_len);
+			//fflush(stdout);
 			create_rrfrag(&rrfrag, 0, 0, out_len, hash, NULL);
 			free(bytes);
 			insert_rrfrag(msg, idx, rrfrag);
@@ -1391,11 +1401,44 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 			cur_size += RRFRAGHEADER;
 		} else {
 			// How much do we have to work with?
-			printf("in there\n");
+			size_t cs = abs(cur_size + (RRFRAGHEADER - RRHEADER - rr->name_byte_len) - (max_size - DNSMESSAGEHEADER));
+			//printf("name_byte_len: %lu\n", rr->name_byte_len);
+			//printf("rdsize: %hu\n", rr->rdsize);
+			//printf("difference: %lu\n", cs);
+			//printf("cur_size: %lu\n", cur_size);
+			//printf("max_size: %lu\n", max_size);
+			if (cs > rr->rdsize) {
+				cs = 0;
+			} else {
+				cs = rr->rdsize - cs;
+			}
+			double numblocks = ((double)cs) / ((double)BLOCKSIZE);
+			//printf("new fragsize: %lu\n", cs);
+			//printf("numblocks: %lf\n", numblocks);
+			RRFrag *rrfrag;
+			unsigned char *bytes;
+			size_t out_len;
+			rr_to_bytes(rr, &bytes, &out_len);
+			//printf("==========out_len: %lu\n", out_len);
+			uint16_t fragsize = floor(numblocks) * BLOCKSIZE;
+			//printf("fragsize: %hu\n", fragsize);
+			if (cs > 0) {
+				create_rrfrag(&rrfrag, fragsize, 0, out_len, hash, bytes);
+				cur_size -= out_len;
+			} else {
+				create_rrfrag(&rrfrag, fragsize, 0, 0, hash, NULL);
+				cur_size -= out_len;
+			}
+			free(bytes);
+			insert_rrfrag(msg, idx, rrfrag);
+			rrfrag_to_bytes(rrfrag, &bytes, &out_len);
+			free(bytes);
+			cur_size += out_len;
+			//printf("post cur_size: %lu\n", cur_size);
+			/*
+			double maxblocks = ((double)cs / BLOCKSIZE;
+			printf("maxblocks: %lu\n", maxblocks);
 			fflush(stdout);
-			size_t cs = abs(cur_size + (RRFRAGHEADER - RRHEADER - strlen(rr->name)) - (max_size - DNSMESSAGEHEADER));
-			cs = rr->rdsize - cs;
-			double maxblocks = (double)cs / BLOCKSIZE;
 			// make rrfrag of fragsize maxblocks
 			RRFrag *rrfrag;
 			unsigned char *bytes;
@@ -1409,11 +1452,12 @@ insert_into_state_and_construct_map(DNSMessage* msg, size_t max_size) {
 			rrfrag_to_bytes(rrfrag, &bytes, &out_len);
 			free(bytes);
 			cur_size += out_len;
+			*/
 			// if we get to this case, we're done and can just break out of our loop
 			break;
 		}
 	}
-	printf("cursize: %lu, maxsize: %lu DNSHEADER %u\n", cur_size, max_size, DNSHEADERSIZE); 
+	//printf("cursize: %lu, maxsize: %lu DNSHEADER %u\n", cur_size, max_size, DNSHEADERSIZE); 
 
 }
 
@@ -1445,7 +1489,14 @@ responding_thread_end(struct iphdr *iphdr, void *transport_hdr, bool is_tcp,
 	if (is_tcp) {
 		raw_socket_send(fd, msg_bytes, byte_len, iphdr->daddr, iphdr->saddr, ((struct tcphdr *)transport_hdr)->dest, ((struct tcphdr *)transport_hdr)->source, is_tcp);
 	} else {
-		assert(byte_len < MAXUDP);
+		if (byte_len > MAXUDP) {
+			printf("byte_len: %lu, MAXUDP: %u, difference: %lu\n", byte_len, MAXUDP, byte_len - (size_t)MAXUDP);
+			size_t smaller_len = byte_len - (byte_len - MAXUDP);
+			printf("smaller_len: %lu\n", smaller_len);
+			bytes_to_dnsmessage(msg_bytes, smaller_len, &recvd_msg);
+			dnsmessage_to_string(recvd_msg);
+			assert(byte_len <= MAXUDP);
+		}
 		raw_socket_send(fd, msg_bytes, byte_len, iphdr->daddr, iphdr->saddr, ((struct udphdr *)transport_hdr)->dest, ((struct udphdr *)transport_hdr)->source, is_tcp);
 
 	}
@@ -1488,6 +1539,8 @@ process_dns_message(struct nfq_q_handle *qh, uint32_t id, unsigned char *payload
 		return NF_ACCEPT;
 	}
 	int rc = bytes_to_dnsmessage(pkt_content, msgSize, &msg);
+	//printf("msgSize: %lu\n", msgSize);
+	//fflush(stdout);
 	if (rc != 0) {
 		printf("[Error]Failed to convert bytes to dns_message\n");
 		ERROR();
@@ -1890,6 +1943,7 @@ main(int argc, char **argv) {
 			printf("Is a resolver\n");
 			is_resolver = true;
 		} else if (strcmp(argv[i], "--bypass") == 0) {
+			printf("bypassing daemon\n");
 			BYPASS = true;
 		} else if (strcmp(argv[i], "--maxudp") == 0) {
 			i++;

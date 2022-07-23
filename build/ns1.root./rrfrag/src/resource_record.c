@@ -269,9 +269,12 @@ rr_to_bytes(ResourceRecord *in, unsigned char **out, size_t *out_len) {
 	rdsize = htons(in->rdsize);
 	memcpy(cur_pos, &rdsize,2);
 	cur_pos = cur_pos + 2;
-
-	memcpy(cur_pos, in->rdata, in->rdsize);
-	*out_len = in->name_byte_len + 2 + 2 + 4 + 2 + in->rdsize;
+	if (in->rdsize != 0) {
+		memcpy(cur_pos, in->rdata, in->rdsize);
+		*out_len = in->name_byte_len + 2 + 2 + 4 + 2 + in->rdsize;
+	} else {
+		*out_len = in->name_byte_len + 2 + 2 + 4 + 2;
+	}
 	*out = bytes;
 	free(name);
 end:
