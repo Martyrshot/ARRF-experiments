@@ -98,8 +98,11 @@ for client in client_data:
     os.system("cp client/Dockerfile build/" + client["name"] + "/Dockerfile")
     docker_compose_file.write("        build: "+ client["name"] + "/\n")
     docker_compose_file.write("        stdin_open: true\n")
+    docker_compose_file.write("        privileged: true\n")
     docker_compose_file.write("        tty: true\n")
     docker_compose_file.write("        dns: " + client["dns_ip"] + "\n")
+    docker_compose_file.write("        cap_add:\n")
+    docker_compose_file.write("           - NET_ADMIN\n")
     docker_compose_file.write("        entrypoint: /bin/bash" + "\n")
     docker_compose_file.write("        networks:" + "\n")
     for network in client["networks"]:
@@ -162,6 +165,7 @@ for resolver in resolver_data:
     docker_compose_file.write("            args:\n")
     docker_compose_file.write("                LISTENIP: " + resolver["networks"][0]["ip_address"] + "\n")
     docker_compose_file.write("        stdin_open: true\n")
+    docker_compose_file.write("        privileged: true\n")
     docker_compose_file.write("        tty: true\n")
     docker_compose_file.write("        networks:\n")
     for network in resolver["networks"]:
@@ -249,6 +253,7 @@ for name_server in ns_data:
     docker_compose_file.write("            args:\n")
     docker_compose_file.write("                LISTENIP: " + name_server["networks"][0]["ip_address"] + "\n")
     docker_compose_file.write("        stdin_open: true\n")
+    docker_compose_file.write("        privileged: true\n")
     docker_compose_file.write("        tty: true\n")
     docker_compose_file.write("        networks:\n")
     for network in name_server["networks"]:
