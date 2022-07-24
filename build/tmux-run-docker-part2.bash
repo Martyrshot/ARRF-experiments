@@ -1,7 +1,7 @@
 #! /bin/bash
-tmux select-pane -t 1
-tmux send-keys 'dig test'$1'.goertzen' Enter
-sleep 0.5
-tmux capture-pane -pS - > dig_logs/run_$1.log
-tmux send-keys -R Enter
-tmux clear-history
+#tmux select-pane -t docker-bind:0.1
+tmux send-keys -t docker-bind:0.1 'dig test'$1'.goertzen' Enter
+sleep 10
+tmux capture-pane -t docker-bind:0.1 -pS - > dig_logs/run_$1.log
+tmux send-keys -t docker-bind:0.1 -R Enter
+tmux clear-history -t docker-bind:0.1

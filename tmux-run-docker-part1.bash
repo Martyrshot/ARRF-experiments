@@ -1,12 +1,44 @@
 #! /bin/bash
 tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
 sleep 4
-tmux split-window -t 'bind' -h 'docker compose up resolver'
+tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
 sleep 4
-tmux split-window -t 'bind' -v 'docker compose up ns1_goertzen host1 client1'
+tmux split-window -t 'docker-bind:0' -v 'docker compose up ns1_goertzen host1 client1'
 sleep 4
-tmux select-pane -t 0
-tmux split-window -t 'bind' -v 'docker exec -it build-client1-1 /bin/bash'
+tmux split-window -t 'docker-bind:0.0' -v 'docker exec -it build-client1-1 /bin/bash'
 sleep 4
-tmux select-pane -t 1
-tmux a -t 'docker-bind'
+#tmux select-pane -t docker-bind:0.1
+tmux send-keys -t docker-bind:0.1 'dig test.goertzen' Enter
+sleep 1
+tmux capture-pane -t docker-bind:0.1 -pS - > setup.log
+tmux send-keys -t docker-bind:0.1 -R Enter
+tmux clear-history -t docker-bind:0.1
+grep -i 'SERVFAIL' setup.log > /dev/null
+while [[ $? == 0 ]]
+do
+	echo "Trying again..."
+	tmux send-keys -t docker-bind:0.1 'exit' Enter
+	#tmux select-pane -t 0
+	tmux send-keys -t docker-bind:0.0 '^c'
+	#tmux select-pane -t 1
+	tmux send-keys -t docker-bind:0.1 '^c'
+	#tmux select-pane -t 2
+	tmux send-keys -t docker-bind:0.2 '^c'
+	sleep 11
+	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
+	sleep 2
+	tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
+	sleep 2
+	tmux split-window -t 'docker-bind:0' -v 'docker compose up ns1_goertzen host1 client1'
+	sleep 2
+	#tmux select-pane -t bind:0
+	tmux split-window -t 'docker-bind:0.0' -v 'docker exec -it build-client1-1 /bin/bash'
+	sleep 2
+	tmux select-pane -t docker-bind:0.1
+	tmux send-keys -t docker-bind:0.1 'dig test.goertzen' Enter
+	sleep 1
+	tmux capture-pane -t docker-bind:0.1 -pS - > setup.log
+	tmux send-keys -t docker-bind:0.1 -R Enter
+	tmux clear-history -t docker-bind:0.1
+	grep -i 'SERVFAIL' setup.log > /dev/null
+done
