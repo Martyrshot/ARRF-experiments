@@ -46,4 +46,4 @@ RUN make daemon
 ENV LISTENIP=${LISTENIP}
 WORKDIR /
 #CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --is_resolver & named -g -d 3
-CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --maxudp 12322 --is_resolver & named -g -d 3
+CMD /setup_files/install_trust_anchor.bash && rm -rf /dsset/* && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && ./rrfrag/daemon ${LISTENIP} --maxudp 512 --is_resolver & named -g -d 3
