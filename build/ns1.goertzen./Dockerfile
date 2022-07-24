@@ -14,7 +14,7 @@ RUN mkdir liboqs/build
 RUN cd liboqs/build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/oqs-openssl-source/oqs ..
 RUN cd liboqs/build && ninja
 RUN cd liboqs/build && ninja install
-RUN cd oqs-openssl-source && ./Configure no-shared linux-aarch64 --prefix=/oqs-openssl -lm
+RUN cd oqs-openssl-source && ./Configure no-shared linux-x86_64 --prefix=/oqs-openssl -lm
 RUN cd oqs-openssl-source && make
 RUN cd oqs-openssl-source && make install
 RUN git clone --branch even-larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
@@ -59,4 +59,4 @@ RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN
 RUN cd /usr/local/etc/bind/zones && dnssec-signzone -o goertzen -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.goertzen
-CMD /setup_files/move_ds.bash goertzen. && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --bypass & named -d 3 && /bin/bash
+CMD /setup_files/move_ds.bash goertzen. && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 12322 & named -d 3 && /bin/bash

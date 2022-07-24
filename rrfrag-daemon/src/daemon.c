@@ -1491,10 +1491,6 @@ responding_thread_end(struct iphdr *iphdr, void *transport_hdr, bool is_tcp,
 	} else {
 		if (byte_len > MAXUDP) {
 			printf("byte_len: %lu, MAXUDP: %u, difference: %lu\n", byte_len, MAXUDP, byte_len - (size_t)MAXUDP);
-			size_t smaller_len = byte_len - (byte_len - MAXUDP);
-			printf("smaller_len: %lu\n", smaller_len);
-			bytes_to_dnsmessage(msg_bytes, smaller_len, &recvd_msg);
-			dnsmessage_to_string(recvd_msg);
 			assert(byte_len <= MAXUDP);
 		}
 		raw_socket_send(fd, msg_bytes, byte_len, iphdr->daddr, iphdr->saddr, ((struct udphdr *)transport_hdr)->dest, ((struct udphdr *)transport_hdr)->source, is_tcp);

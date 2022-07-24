@@ -14,7 +14,7 @@ RUN mkdir liboqs/build
 RUN cd liboqs/build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/oqs-openssl-source/oqs ..
 RUN cd liboqs/build && ninja
 RUN cd liboqs/build && ninja install
-RUN cd oqs-openssl-source && ./Configure no-shared linux-aarch64 --prefix=/oqs-openssl -lm
+RUN cd oqs-openssl-source && ./Configure no-shared linux-x86_64 --prefix=/oqs-openssl -lm
 RUN cd oqs-openssl-source && make
 RUN cd oqs-openssl-source && make install
 RUN git clone --branch even-larger-udp https://github.com/Martyrshot/OQS-bind.git /bind9
@@ -58,4 +58,4 @@ RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a SPHINCS+-SHA256-128S -n ZON
 RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN
-CMD cd /usr/local/etc/bind/zones && /setup_files/add_ds.bash db.root goertzen. && if [ ! -f /usr/local/etc/bind/zones/db.root.signed ]; then dnssec-signzone -o . -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.root;fi && /setup_files/move_ds.bash . && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --bypass & named -g -d 3
+CMD cd /usr/local/etc/bind/zones && /setup_files/add_ds.bash db.root goertzen. && if [ ! -f /usr/local/etc/bind/zones/db.root.signed ]; then dnssec-signzone -o . -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.root;fi && /setup_files/move_ds.bash . && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 12322 & named -g -d 3
