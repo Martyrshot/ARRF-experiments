@@ -34,7 +34,7 @@ do
 	tmux has-session -t docker-bind 2> /dev/null > /dev/null
 	if [[ $? == 0 ]]
 	then
-		tmux kill-session docker-bind
+		tmux kill-session -t docker-bind
 	fi
 	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
 	sleep 10
