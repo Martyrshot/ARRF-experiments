@@ -1,5 +1,5 @@
 #! /bin/bash
-tmux has-session -t docker-bind > /dev/null
+tmux has-session -t docker-bind 2> /dev/null > /dev/null
 if [[ $? == 0 ]]
 then
 	tmux kill-session -t docker-bind
@@ -31,7 +31,7 @@ do
 	#tmux select-pane -t 2
 	tmux send-keys -t docker-bind:0.2 '^c'
 	sleep 15
-	tmux has-session -t docker-bind > /dev/null
+	tmux has-session -t docker-bind 2> /dev/null > /dev/null
 	if [[ $? == 0 ]]
 	then
 		tmux kill-session docker-bind
