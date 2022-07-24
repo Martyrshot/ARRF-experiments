@@ -32,10 +32,11 @@ do
 	tmux send-keys -t docker-bind:0.2 '^c'
 	sleep 15
 	tmux has-session -t docker-bind 2> /dev/null > /dev/null
-	if [[ $? == 0 ]]
-	then
-		tmux kill-session docker-bind
-	fi
+	while [[ $? == 0 ]]
+	do
+		sleep 1
+		tmux has-session -t docker-bind 2> /dev/null > /dev/null
+	done
 	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
 	sleep 10
 	tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
