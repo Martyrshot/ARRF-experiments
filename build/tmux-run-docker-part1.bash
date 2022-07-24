@@ -24,7 +24,8 @@ do
 	tmux send-keys -t docker-bind:0.1 '^c'
 	#tmux select-pane -t 2
 	tmux send-keys -t docker-bind:0.2 '^c'
-	sleep 11
+	sleep 13
+	tmux kill-session -t docker-bind
 	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
 	sleep 2
 	tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
