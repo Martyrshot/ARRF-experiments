@@ -1,9 +1,9 @@
 #! /bin/bash
 
 export NUM_EXPS=$(expr $2 - $1)
-mkdir -p dig_logs
 #docker compose build --build-arg "SIGN=$(date +%Y%m%d-%H%M%S)"
 cd build
+mkdir -p dig_logs
 ./tmux-run-docker-part1.bash
 cd ..
 echo "Setting network conditions..."
