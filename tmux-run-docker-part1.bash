@@ -1,4 +1,10 @@
 #! /bin/bash
+tmux has-session -t docker-bind
+if [[ $? == 0 ]]
+then
+	tmux kill-session docker-bind
+fi
+
 tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
 sleep 4
 tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
@@ -25,6 +31,11 @@ do
 	#tmux select-pane -t 2
 	tmux send-keys -t docker-bind:0.2 '^c'
 	sleep 11
+	tmux has-session -t docker-bind
+	if [[ $? == 0 ]]
+	then
+		tmux kill-session docker-bind
+	fi
 	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
 	sleep 2
 	tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
