@@ -34,7 +34,8 @@ do
 	tmux has-session -t docker-bind 2> /dev/null > /dev/null
 	while [[ $? == 0 ]]
 	do
-		sleep 1
+		tmux send-keys -t docker-bind:0.0 '^c'
+		sleep 15
 		tmux has-session -t docker-bind 2> /dev/null > /dev/null
 	done
 	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
