@@ -1,0 +1,26 @@
+
+root@7dbf528480e0:/# dig test665.goertzen
+
+; <<>> DiG 9.16.1-Ubuntu <<>> test665.goertzen
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 59354
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65355
+; COOKIE: d042caf24a1a3fe10100000062dc524b5695babfadce411f (good)
+;; QUESTION SECTION:
+;test665.goertzen.              IN      A
+
+;; Query time: 32 msec
+;; SERVER: 127.0.0.11#53(127.0.0.11)
+;; WHEN: Sat Jul 23 19:55:55 UTC 2022
+;; MSG SIZE  rcvd: 73
+
+root@7dbf528480e0:/#
+
+
+
+
+
