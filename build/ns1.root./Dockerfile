@@ -58,4 +58,4 @@ RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a SPHINCS+-SHA256-128S -n ZON
 RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN
-CMD cd /usr/local/etc/bind/zones && /setup_files/add_ds.bash db.root goertzen. && if [ ! -f /usr/local/etc/bind/zones/db.root.signed ]; then dnssec-signzone -o . -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.root;fi && /setup_files/move_ds.bash . && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 512 & named -g -d 3
+CMD cd /usr/local/etc/bind/zones && /setup_files/add_ds.bash db.root goertzen. && if [ ! -f /usr/local/etc/bind/zones/db.root.signed ]; then dnssec-signzone -o . -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.root;fi && /setup_files/move_ds.bash . && iptables -A INPUT -p ip -j NFQUEUE --queue-num 0 && iptables -A OUTPUT -p ip -j NFQUEUE --queue-num 0 && ifconfig && cd / && ./rrfrag/daemon ${LISTENIP} --maxudp 256 & named -g -d 3
