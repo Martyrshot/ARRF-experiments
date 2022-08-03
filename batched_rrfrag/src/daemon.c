@@ -1182,8 +1182,8 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 	// 	  we need.
 	// 	- send the query as if it was from the original process.
 	
-	printf("requester_thread\n");
-	fflush(stdout);
+	//printf("requester_thread\n");
+	//fflush(stdout);
 	// Step 1
 	uint16_t id = msg->identification;
 	PartialDNSMessage *pm;
@@ -1195,15 +1195,15 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 		init_partialdnsmessage(&pm);
 		hashmap_set(requester_state, _id, sizeof(uint16_t), (uintptr_t)pm);
 	}
-	printf("pre copy\n");
-	fflush(stdout);
+	//printf("pre copy\n");
+	//fflush(stdout);
 	copy_message_contents(pm, msg);
-	printf("post copy\n");
-	fflush(stdout);
+	//printf("post copy\n");
+	//fflush(stdout);
 	if (message_complete(pm)) {
 		// We are done! Send the reconstructed message to the requester
-		printf("message complete!\n");
-		fflush(stdout);
+		//printf("message complete!\n");
+		//fflush(stdout);
 		int fd;
 		size_t bytelen;
 		unsigned char *bytes;
@@ -1222,15 +1222,15 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 		if (is_tcp) {
 			raw_socket_send(fd, bytes, bytelen, iphdr->saddr, iphdr->daddr, ((struct tcphdr *)transport_header)->source, ((struct tcphdr *)transport_header)->dest, is_tcp);
 		} else {
-			printf("Sending complete message\n");
-			fflush(stdout);
+			//printf("Sending complete message\n");
+			//fflush(stdout);
 			raw_socket_send(fd, bytes, bytelen, iphdr->saddr, iphdr->daddr, ((struct udphdr *)transport_header)->source, ((struct udphdr *)transport_header)->dest, is_tcp);
 		}
 		generic_close(&fd);
 		return;
 	} else if (message_complete_soon(pm)) {
 		// We've requested everything we need to request and just need to wait.
-		printf("Message will be complete soon!\n");
+		//printf("Message will be complete soon!\n");
 		return;
 	}
 
@@ -1291,15 +1291,15 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 	uint16_t an_frags_requested = frags_requested(pm->answers_section, pm->ancount);
 	uint16_t ns_frags_requested = frags_requested(pm->authoritative_section, pm->nscount);
 	uint16_t ar_frags_requested = frags_requested(pm->additional_section, pm->arcount);
-	printf("an_frags_requested: %hu; an_not_complete: %hu\n", an_frags_requested, an_not_complete);
-	printf("ns_frags_requested: %hu; ns_not_complete: %hu\n", ns_frags_requested, ns_not_complete);
-	printf("ar_frags_requested: %hu; ar_not_complete: %hu\n", ar_frags_requested, ar_not_complete);
+	//printf("an_frags_requested: %hu; an_not_complete: %hu\n", an_frags_requested, an_not_complete);
+	//printf("ns_frags_requested: %hu; ns_not_complete: %hu\n", ns_frags_requested, ns_not_complete);
+	//printf("ar_frags_requested: %hu; ar_not_complete: %hu\n", ar_frags_requested, ar_not_complete);
 	while ((an_frags_requested < an_not_complete) ||
 		(ns_frags_requested < ns_not_complete) ||
 		(ar_frags_requested < ar_not_complete)) {
-		printf("an_frags_requested: %hu; an_not_complete: %hu\n", an_frags_requested, an_not_complete);
-		printf("ns_frags_requested: %hu; ns_not_complete: %hu\n", ns_frags_requested, ns_not_complete);
-		printf("ar_frags_requested: %hu; ar_not_complete: %hu\n", ar_frags_requested, ar_not_complete);
+		//printf("an_frags_requested: %hu; an_not_complete: %hu\n", an_frags_requested, an_not_complete);
+		//printf("ns_frags_requested: %hu; ns_not_complete: %hu\n", ns_frags_requested, ns_not_complete);
+		//printf("ar_frags_requested: %hu; ar_not_complete: %hu\n", ar_frags_requested, ar_not_complete);
 		uint16_t cur_message_size = DNSMESSAGEHEADER;
 		PackedRR **an_rrfrags = NULL;
 		uint16_t an_rrfrag_count = 0;
@@ -1354,12 +1354,12 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 		if (is_tcp) {
 			raw_socket_send(fd, bytes, bytelen, iphdr->daddr, iphdr->saddr, ((struct tcphdr *)transport_header)->dest, ((struct tcphdr *)transport_header)->source, is_tcp);
 		} else {
-			printf("Sending message...\n");
+			//printf("Sending message...\n");
 			raw_socket_send(fd, bytes, bytelen, iphdr->daddr, iphdr->saddr, ((struct udphdr *)transport_header)->dest, ((struct udphdr *)transport_header)->source, is_tcp);
 		}
 	}
-	printf("Sent all messages\n");
-	fflush(stdout);
+	//printf("Sent all messages\n");
+	//fflush(stdout);
 }
 
 void

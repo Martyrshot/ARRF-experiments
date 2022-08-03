@@ -6,13 +6,13 @@ then
 fi
 
 tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
-sleep 5
+sleep 15
 tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
-sleep 5
+sleep 15
 tmux split-window -t 'docker-bind:0' -v 'docker compose up ns1_goertzen host1 client1'
-sleep 5
+sleep 15
 tmux split-window -t 'docker-bind:0.0' -v 'docker exec -it build-client1-1 /bin/bash'
-sleep 5
+sleep 15
 #tmux select-pane -t docker-bind:0.1
 tmux send-keys -t docker-bind:0.1 'dig test.goertzen' Enter
 sleep 10
@@ -32,22 +32,24 @@ do
 	tmux send-keys -t docker-bind:0.2 '^c'
 	sleep 15
 	tmux has-session -t docker-bind 2> /dev/null > /dev/null
-	if [[ $? == 0 ]]
-	then
-		tmux kill-session -t docker-bind
-	fi
+	while [[ $? == 0 ]]
+	do
+		tmux send-keys -t docker-bind:0.0 '^c'
+		sleep 15
+		tmux has-session -t docker-bind 2> /dev/null > /dev/null
+	done
 	tmux new-session -d -s 'docker-bind' -n 'bind' 'docker compose up ns1_root'
-	sleep 10
+	sleep 20
 	tmux split-window -t 'docker-bind:0' -h 'docker compose up resolver'
-	sleep 10
+	sleep 20
 	tmux split-window -t 'docker-bind:0' -v 'docker compose up ns1_goertzen host1 client1'
-	sleep 10
+	sleep 20
 	#tmux select-pane -t bind:0
 	tmux split-window -t 'docker-bind:0.0' -v 'docker exec -it build-client1-1 /bin/bash'
-	sleep 10
+	sleep 20
 	tmux select-pane -t docker-bind:0.1
 	tmux send-keys -t docker-bind:0.1 'dig test.goertzen' Enter
-	sleep 10
+	sleep 20
 	tmux capture-pane -t docker-bind:0.1 -pS - > setup.log
 	tmux send-keys -t docker-bind:0.1 -R Enter
 	tmux clear-history -t docker-bind:0.1
