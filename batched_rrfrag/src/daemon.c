@@ -201,7 +201,7 @@ copy_section(PartialDNSMessage *pm, PackedRR **msgsection, uint16_t sec_len, uin
 			}
 			// Sanity check that we aren't overwriting anything we shouldn't.
 			uint16_t blockidx = curidx / (double)BLOCKSIZE;
-			uint16_t lastblockidx = blockidx + ceil(fragsize/ (double)BLOCKSIZE);
+			uint16_t lastblockidx = blockidx + ceil(fragsize / (double)BLOCKSIZE);
 			uint16_t totalblocks = ceil(rrfrag->rrsize / (double)BLOCKSIZE);
 			if (prr->block_markers == NULL) {
 				prr->block_markers = malloc(sizeof(int8_t) * totalblocks);
@@ -1122,7 +1122,7 @@ pack_section(PackedRR ***packed_rrfrags, PartialRR **section, uint16_t section_l
 				printf("Error making rrfrag for follow up request\n");
 				ERROR();
 			}
-			cursize += ((numblockscanfit - 1) * BLOCKSIZE) + lastblocksize - RRHEADER + RRFRAGHEADER;
+			cursize += ((numblocks - 1) * BLOCKSIZE) + lastblocksize - RRHEADER + RRFRAGHEADER;
 			if (create_packedrr(rrf, rrfrags + _rrfrag_count) != 0) {
 				printf("Error creating packedrr 1\n");
 				fflush(stdout);

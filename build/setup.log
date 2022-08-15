@@ -1,15 +1,15 @@
-root@0422048af274:/# dig +tries=1 +timeout=15 @172.20.0.2 test.goertzen
+root@3137ff30b087:/# dig +tries=1 +timeout=10 @172.20.0.2 test.goertzen
 
 ; <<>> DiG 9.17.12 <<>> +tries +timeout @172.20.0.2 test.goertzen
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8532
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62180
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 2
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 65355
-; COOKIE: 4180ec65fb9d45ca0100000062fa5e8d42df19d6984d3a0c (good)
+; COOKIE: d1f94967172e5fd20100000062fa9485ece34aa231fb0a44 (good)
 ;; QUESTION SECTION:
 ;test.goertzen.                 IN      A
 
@@ -22,9 +22,9 @@ goertzen.               604800  IN      NS      ns1.goertzen.
 ;; ADDITIONAL SECTION:
 ns1.goertzen.           604800  IN      A       172.20.0.4
 
-;; Query time: 88 msec
+;; Query time: 40 msec
 ;; SERVER: 172.20.0.2#53(172.20.0.2) (UDP)
-;; WHEN: Mon Aug 15 14:56:13 UTC 2022
+;; WHEN: Mon Aug 15 18:46:29 UTC 2022
 ;; MSG SIZE  rcvd: 120
 
-root@0422048af274:/#
+root@3137ff30b087:/#
