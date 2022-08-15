@@ -11,6 +11,7 @@ RUN DEBIAN_FRONTEND="noninteractive" TZ="Canada/Toronto" apt install ssh vim git
 RUN DEBIAN_FRONTEND="noninteractive" TZ="Canada/Toronto" apt install astyle cmake gcc ninja-build libssl-dev python3-pytest python3-pytest-xdist unzip xsltproc doxygen graphviz -y
 RUN git clone --branch OQS-OpenSSL_1_1_1-stable https://github.com/Martyrshot/openssl.git /oqs-openssl-source
 RUN git clone https://github.com/open-quantum-safe/liboqs.git
+RUN cd liboqs && git checkout af76ca3b1f2fbc1f4f0967595f3bb07692fb3d82
 RUN mkdir liboqs/build
 RUN cd liboqs/build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/oqs-openssl-source/oqs ..
 RUN cd liboqs/build && ninja

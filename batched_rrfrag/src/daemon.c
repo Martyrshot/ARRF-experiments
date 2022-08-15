@@ -205,8 +205,8 @@ copy_section(PartialDNSMessage *pm, PackedRR **msgsection, uint16_t sec_len, uin
 			uint16_t totalblocks = ceil(rrfrag->rrsize / (double)BLOCKSIZE);
 			if (prr->block_markers == NULL) {
 				prr->block_markers = malloc(sizeof(int8_t) * totalblocks);
-				for (uint16_t i = 0; i < totalblocks; i++) {
-					prr->block_markers[i] = BLOCKFREE;
+				for (uint16_t j = 0; j < totalblocks; j++) {
+					prr->block_markers[j] = BLOCKFREE;
 				}
 				prr->expected_blocks = totalblocks;
 			}
@@ -219,15 +219,15 @@ copy_section(PartialDNSMessage *pm, PackedRR **msgsection, uint16_t sec_len, uin
 				}
 				prr->rrsize = rrfrag->rrsize;
 			}
-			for (uint16_t i = blockidx; i < lastblockidx; i++) {
-				if (prr->block_markers[i] == BLOCKRECVD) {
+			for (uint16_t j = blockidx; j < lastblockidx; j++) {
+				if (prr->block_markers[j] == BLOCKRECVD) {
 					printf("block wasn't waiting for data\n");
 					ERROR();
 				}
 			}
 			memcpy(prr->bytes + rrfrag->curidx, rrfrag->fragdata, rrfrag->fragsize);
-			for (uint16_t i = blockidx; i < lastblockidx; i++) {
-				prr->block_markers[i] = BLOCKRECVD;
+			for (uint16_t j = blockidx; j < lastblockidx; j++) {
+				prr->block_markers[j] = BLOCKRECVD;
 			}
 			prr->blocks_received += lastblockidx - blockidx;
 			prr->bytes_received += rrfrag->fragsize;
@@ -1095,12 +1095,12 @@ pack_section(PackedRR ***packed_rrfrags, PartialRR **section, uint16_t section_l
 		ssize_t curidx = -1;
 		size_t numblocks = 0;
 		//size_t numblocksrecvdreq = 0;
-		for (size_t i = 0; i < prr->expected_blocks; i++) {
-			if (prr->block_markers[i] == BLOCKFREE
+		for (size_t j = 0; j < prr->expected_blocks; j++) {
+			if (prr->block_markers[j] == BLOCKFREE
 					&& curidx == -1) {
-				curidx = i;
+				curidx = j;
 				numblocks++;
-			} else if (prr->block_markers[i] == BLOCKFREE
+			} else if (prr->block_markers[j] == BLOCKFREE
 					&& curidx != -1) {
 				numblocks++;
 			}

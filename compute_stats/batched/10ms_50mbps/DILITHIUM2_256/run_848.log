@@ -1,15 +1,15 @@
 
-root@51850e87d0ba:/# dig test848.goertzen
+root@f928ae4cf1ad:/# dig test848.goertzen
 
 ; <<>> DiG 9.16.1-Ubuntu <<>> test848.goertzen
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 28147
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51190
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 2
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 65355
-; COOKIE: 2960ba62013f5b570100000062e967420424a36307eeaab1 (good)
+; COOKIE: 959bee299f9c9a960100000062eabfdf950dc9e6d98edf8c (good)
 ;; QUESTION SECTION:
 ;test848.goertzen.              IN      A
 
@@ -17,14 +17,14 @@ root@51850e87d0ba:/# dig test848.goertzen
 test848.goertzen.       604800  IN      A       42.42.42.42
 
 ;; AUTHORITY SECTION:
-goertzen.               604572  IN      NS      ns1.goertzen.
+goertzen.               604664  IN      NS      ns1.goertzen.
 
 ;; ADDITIONAL SECTION:
-ns1.goertzen.           604572  IN      A       172.20.0.4
+ns1.goertzen.           604664  IN      A       172.20.0.4
 
-;; Query time: 71 msec
+;; Query time: 79 msec
 ;; SERVER: 127.0.0.11#53(127.0.0.11)
-;; WHEN: Tue Aug 02 18:04:50 UTC 2022
+;; WHEN: Wed Aug 03 18:35:11 UTC 2022
 ;; MSG SIZE  rcvd: 123
 
-root@51850e87d0ba:/#
+root@f928ae4cf1ad:/#

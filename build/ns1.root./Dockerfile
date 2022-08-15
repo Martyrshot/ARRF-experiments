@@ -10,6 +10,7 @@ RUN TZ="Canada/Toronto" apt install ssh vim git pkg-config autoconf automake bui
 RUN TZ="Canada/Toronto" apt install astyle cmake gcc ninja-build libssl-dev python3-pytest python3-pytest-xdist unzip xsltproc doxygen graphviz -y
 RUN git clone --branch OQS-OpenSSL_1_1_1-stable https://github.com/Martyrshot/openssl.git /oqs-openssl-source
 RUN git clone https://github.com/open-quantum-safe/liboqs.git
+RUN cd liboqs && git checkout af76ca3b1f2fbc1f4f0967595f3bb07692fb3d82
 RUN mkdir liboqs/build
 RUN cd liboqs/build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/oqs-openssl-source/oqs ..
 RUN cd liboqs/build && ninja
@@ -53,8 +54,8 @@ WORKDIR /
 #RUN cd /usr/local/etc/bind/zones && dnssec-signzone -o goertzen -N INCREMENT -t -S -K /usr/local/etc/bind/zones db.goertzen
 #CMD /bin/bash # arguments will need to be hard coded with the parse script here
 COPY db.root /usr/local/etc/bind/zones
-RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a SPHINCS+-SHA256-128S -n ZONE .
-RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a SPHINCS+-SHA256-128S -n ZONE -f KSK .
+RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a DILITHIUM2 -n ZONE .
+RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a DILITHIUM2 -n ZONE -f KSK .
 RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key
 ARG SIGN=unknown
 RUN echo $SIGN

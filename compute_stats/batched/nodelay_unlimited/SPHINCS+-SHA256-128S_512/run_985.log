@@ -1,0 +1,36 @@
+
+root@8e800b77743d:/# dig test985.goertzen
+
+; <<>> DiG 9.16.1-Ubuntu <<>> test985.goertzen
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53
+021
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1,
+ ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65355
+; COOKIE: 3342db17297473330100000062ec5eb4f2035405311e
+420c (good)
+;; QUESTION SECTION:
+;test985.goertzen.              IN      A
+
+;; ANSWER SECTION:
+test985.goertzen.       604800  IN      A       42.42.
+42.42
+
+;; AUTHORITY SECTION:
+goertzen.               604742  IN      NS      ns1.go
+ertzen.
+
+;; ADDITIONAL SECTION:
+ns1.goertzen.           604742  IN      A       172.20
+.0.4
+
+;; Query time: 87 msec
+;; SERVER: 127.0.0.11#53(127.0.0.11)
+;; WHEN: Fri Aug 05 00:05:08 UTC 2022
+;; MSG SIZE  rcvd: 123
+
+root@8e800b77743d:/#

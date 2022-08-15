@@ -1,7 +1,7 @@
 #! /bin/bash
 
 export TARDIR=/home/ubuntu/mmath-thesis-testing/x86_res/batched
-export SCENARIOS="10ms_128kbps 10ms_50mbps"
+export SCENARIOS="10ms_128kbps 10ms_50mbps 100ms_50mbps nodelay_unlimited"
 export MAXUDP="65355 1232 512 256"
 export STATSDIR=$(pwd)
 export WORKDIRROOT=$STATSDIR"/batched"

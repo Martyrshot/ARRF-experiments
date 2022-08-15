@@ -16,9 +16,18 @@ then
 	do
 		echo $i
 		./tmux-run-docker-part2.bash $i
-		export FILESIZE=$(wc -c dig_logs/run_$i.log)
-		while [[ $FILESIZE < 800 ]]
+		export FILESIZE=$(wc -c dig_logs/run_$i.log | cut -d ' ' -f 1)
+		export fails=-1
+		echo "FILESIZE=$FILESIZE"
+		while [[ $FILESIZE -le 830 ]]
 		do
+			fails=$(expr $fails + 1)
+			if [[ $fails -ge 3 ]]
+			then
+				echo "Hit max retrys for run $i"
+				echo "Hit max retrys for run $i" >> ../failed.log
+				break
+			fi	
 			echo "Error with run $i"
 			docker compose down
 			echo "Resetting up docker env"
@@ -27,7 +36,7 @@ then
 			./../set_network_conditions.bash
 			echo "Rerunning $i"
 			./tmux-run-docker-part2.bash $i
-			FILESIZE=$(wc -c dig_logs/run_$i.log)
+			FILESIZE=$(wc -c dig_logs/run_$i.log | cut -d ' ' -f 1)
 		done
 	done
 fi

@@ -13,7 +13,7 @@ maxudp = int(args.maxudp)
 algorithm = str(args.alg)
 
 if (algorithm != "FALCON512" and algorithm != "DILITHIUM2"
-    and algorithm != "SPHINCS+-SHA256-128S"):
+    and algorithm != "SPHINCS+-SHA256-128S" and algorithm != "RSASHA256" and algorithm != "ECDSA384"):
     algorithm = "DILITHIUM2"
 
 print("Using algorithm: {} and maxudp: {}".format(algorithm, str(maxudp)))
@@ -213,8 +213,12 @@ for name_server in ns_data:
     docker_file.write("COPY db." + zone + " /usr/local/etc/bind/zones\n")
     if zone == "root":
         zone = "."
-    docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a " + algorithm + " -n ZONE " + zone + "\n")
-    docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a " + algorithm + " -n ZONE -f KSK " + zone + "\n")
+    if algorithm == "RSASHA256":
+        docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a " + algorithm + " -b 2048 -n ZONE " + zone + "\n")
+        docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a " + algorithm + " -b 2048 -n ZONE -f KSK " + zone + "\n")
+    else:
+        docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a " + algorithm + " -n ZONE " + zone + "\n")
+        docker_file.write("RUN cd /usr/local/etc/bind/zones && dnssec-keygen -a " + algorithm + " -n ZONE -f KSK " + zone + "\n")
     docker_file.write("RUN cd /usr/local/etc/bind/ && rndc-confgen -a > rndc.key\n")
     if name_server["leaf"] == "true":
         if zone == ".":
