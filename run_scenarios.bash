@@ -1,8 +1,8 @@
 #! /bin/bash
 
 export OUTPUTDIR="$(pwd)/x86_res/sequential/100ms_50mbps"
-export UDPSIZES="1232 512 256"
-export ALGS="DILITHIUM2 SPHINCS+-SHA256-128S"
+export UDPSIZES="stock notcp"
+export ALGS="FALCON512 DILITHIUM2 SPHINCS+-SHA256-128S"
 export BUILDDIR="$(pwd)/build"
 export WORKINGDIR="$(pwd)"
 mkdir -p $OUTPUTDIR
@@ -12,11 +12,18 @@ do
 	for UDPSIZE in $UDPSIZES
 	do
 		cd $WORKINGDIR
+		echo $UDPSIZE
 		if [[ $UDPSIZE == "notcp" ]]
 		then
 			python3 build_docker_compose.py --bypass --maxudp 1232 --alg $ALG <<< "Y"
 		else
-			python3 build_docker_compose.py --maxudp $UDPSIZE --alg $ALG <<< "Y"
+			if [[ $UDPSIZE == "stock" ]]
+			then
+				python3 build_docker_compose.py --bypass --maxudp 1232 --alg $ALG <<< "Y"
+				cp resolver/named_stock.conf build/resolver/named.conf
+			else
+				python3 build_docker_compose.py --maxudp $UDPSIZE --alg $ALG <<< "Y"
+			fi
 		fi
 		cd $BUILDDIR
 		docker compose down
