@@ -13,7 +13,7 @@ maxudp = int(args.maxudp)
 algorithm = str(args.alg)
 
 if (algorithm != "FALCON512" and algorithm != "DILITHIUM2"
-    and algorithm != "SPHINCS+-SHA256-128S" and algorithm != "RSASHA256" and algorithm != "ECDSA384"):
+    and algorithm != "SPHINCS+-SHA256-128S" and algorithm != "RSASHA256" and algorithm != "ECDSA256"):
     algorithm = "DILITHIUM2"
 
 print("Using algorithm: {} and maxudp: {}".format(algorithm, str(maxudp)))
