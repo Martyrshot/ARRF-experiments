@@ -186,8 +186,8 @@ find_partialrr(PartialDNSMessage *pm, uint16_t rrid, uint8_t *section) {
 void
 copy_section(PartialDNSMessage *pm, PackedRR **msgsection, uint16_t sec_len, uint8_t section) {
 	for (uint16_t i = 0; i < sec_len; i++) {
-		printf("i:%d\n", i);
-		fflush(stdout);
+		//printf("i:%d\n", i);
+		//fflush(stdout);
 		if (msgsection[i]->isRRFrag) {
 			RRFrag *rrfrag = msgsection[i]->data.rrfrag;
 			uint16_t rrid = rrfrag->rrid;
@@ -368,11 +368,11 @@ copy_section(PartialRR **section, size_t section_len, uint16_t *records_done, Pa
 
 void
 copy_message_contents(PartialDNSMessage *data, DNSMessage *msg) {
-	printf("pre wait\n");
-	fflush(stdout);
+	//printf("pre wait\n");
+	//fflush(stdout);
 	sem_wait(&(data->lock));
-	printf("post wait\n");
-	fflush(stdout);
+	//printf("post wait\n");
+	//fflush(stdout);
 	if (!data->identification_set) {
 		data->identification = msg->identification;
 		data->identification_set = true;
@@ -440,17 +440,17 @@ copy_message_contents(PartialDNSMessage *data, DNSMessage *msg) {
 			}
 		}
 	}
-	printf("pre copy_section\n");
-	fflush(stdout);
+	//printf("pre copy_section\n");
+	//fflush(stdout);
 	copy_section(data, msg->answers_section, msg->ancount, 0);
-	printf("1\n");
-	fflush(stdout);
+	//printf("1\n");
+	//fflush(stdout);
 	copy_section(data, msg->authoritative_section, msg->nscount, 1);
-	printf("2\n");
-	fflush(stdout);
+	//printf("2\n");
+	//fflush(stdout);
 	copy_section(data, msg->additional_section, msg->arcount, 2);
-	printf("3\n");
-	fflush(stdout);
+	//printf("3\n");
+	//fflush(stdout);
 	sem_post(&(data->lock));
 }
 
@@ -1069,7 +1069,7 @@ partial_to_dnsmessage(PartialDNSMessage *in, DNSMessage **out) {
 	}
 	DNSMessage *msg;
 	create_dnsmessage(&msg, in->identification, in->flags, in->qdcount, in->ancount, in->nscount, in->arcount, questions, answers, authoritative, additional);
-	dnsmessage_to_string(msg);
+	//dnsmessage_to_string(msg);
 	*out = msg;
 }
 
@@ -1339,7 +1339,7 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 			printf("Error making DNSMessage asking for more rrfrags\n");
 			ERROR();
 		}
-		dnsmessage_to_string(req_msg);
+		//dnsmessage_to_string(req_msg);
 		int fd;
 		unsigned char *bytes;
 		size_t bytelen;
@@ -1626,7 +1626,7 @@ responding_thread_end(struct iphdr *iphdr, void *transport_hdr, bool is_tcp,
 	fd = -1;
 	unsigned char *msg_bytes;
 	size_t byte_len;
-	dnsmessage_to_string(recvd_msg);
+	//dnsmessage_to_string(recvd_msg);
 	dnsmessage_to_bytes(recvd_msg, &msg_bytes, &byte_len);
 	destroy_dnsmessage(&recvd_msg);
 	create_raw_socket(&fd);
@@ -1687,11 +1687,11 @@ process_dns_message(struct nfq_q_handle *qh, uint32_t id, unsigned char *payload
 	}
 	if (is_tcp) return NF_ACCEPT;
 	assert(!is_tcp);
-	printf("==========================\n");
-	fflush(stdout);
-	dnsmessage_to_string(msg);
-	printf("==========================\n");
-	fflush(stdout);
+	//printf("==========================\n");
+	//fflush(stdout);
+	//dnsmessage_to_string(msg);
+	//printf("==========================\n");
+	//fflush(stdout);
 	if (is_internal_packet(iphdr)) {
 		size_t outbuff_len = 65355; // Need to account for large messages because of SPHINCS+
 		unsigned char outbuff[outbuff_len];
@@ -1874,11 +1874,11 @@ process_dns_message(struct nfq_q_handle *qh, uint32_t id, unsigned char *payload
 				if (hashmap_get(requester_state, &id, sizeof(uint16_t), (uintptr_t *)&data)) {
 					//copy_message_contents(data, msg);
 					if (!message_complete(data)) {
-						printf("pre requester_thread\n");
-						fflush(stdout);
+						//printf("pre requester_thread\n");
+						//fflush(stdout);
 						requester_thread(msg, iphdr, transport_header, is_tcp);
-						printf("post requester_thread\n");
-						fflush(stdout);
+						//printf("post requester_thread\n");
+						//fflush(stdout);
 					}
 					return NF_DROP;
 				} else {
@@ -1913,8 +1913,8 @@ process_tcp(struct nfq_q_handle *qh, uint32_t id, struct iphdr *ipv4hdr, unsigne
 	struct tcphdr *tcphdr = (struct tcphdr *)((char *)payload + sizeof(*ipv4hdr));
 	uint16_t src_port = ntohs(tcphdr->source);
 	uint16_t dst_port = ntohs(tcphdr->dest);
-	printf("tcp: <src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
-	fflush(stdout);
+	//printf("tcp: <src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
+	//fflush(stdout);
 	return NF_ACCEPT;
 	return process_dns_message(qh, id, payload, payloadLen, ipv4hdr, tcphdr, true);
 }
@@ -1924,8 +1924,8 @@ process_udp(struct nfq_q_handle *qh, uint32_t id, struct iphdr *ipv4hdr, unsigne
 	struct udphdr *udphdr = (struct udphdr *)((char *)payload + sizeof(*ipv4hdr));
 	uint16_t src_port = ntohs(udphdr->source);
 	uint16_t dst_port = ntohs(udphdr->dest);
-	printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
-	fflush(stdout);
+	//printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
+	//fflush(stdout);
 	if (BYPASS) {
 		return NF_ACCEPT;
 	}
@@ -1961,7 +1961,7 @@ process_packet(struct nfq_q_handle *qh, struct nfq_data *data, uint32_t **verdic
 			res = process_udp(qh, id, ipv4hdr, payload, payloadLen);
 		} else if (ipv4hdr->protocol == IPPROTO_ICMP) {
 			icmphdr = (struct icmphdr *)((char *)payload + sizeof(*ipv4hdr));
-			printf("<type: %hhu, code: %hhu src: %u dest: %u>\n", icmphdr->type, icmphdr->code, ipv4hdr->saddr, ipv4hdr->daddr);
+			//printf("<type: %hhu, code: %hhu src: %u dest: %u>\n", icmphdr->type, icmphdr->code, ipv4hdr->saddr, ipv4hdr->daddr);
 		} else {
 			res = NF_ACCEPT;
 		}
@@ -1969,13 +1969,13 @@ process_packet(struct nfq_q_handle *qh, struct nfq_data *data, uint32_t **verdic
 		struct udphdr *udphdr = (struct udphdr *)((char *)payload + sizeof(*ipv4hdr));
 		uint16_t src_port = ntohs(udphdr->source);
 		uint16_t dst_port = ntohs(udphdr->dest);
-		printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
+		//printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
 		res = NF_DROP;
 	} else {
-		printf("Packet type: %hhu\n", ipv4hdr->protocol);
+		//printf("Packet type: %hhu\n", ipv4hdr->protocol);
 		if (ipv4hdr->protocol == IPPROTO_ICMP) {
 			icmphdr = (struct icmphdr *)((char *)payload + sizeof(*ipv4hdr));
-			printf("<type: %hhu, code: %hhu src: %u dest: %u>\n", icmphdr->type, icmphdr->code, ipv4hdr->saddr, ipv4hdr->daddr);
+			//printf("<type: %hhu, code: %hhu src: %u dest: %u>\n", icmphdr->type, icmphdr->code, ipv4hdr->saddr, ipv4hdr->daddr);
 			res = NF_DROP;
 		} else {
 			res = NF_ACCEPT;
@@ -1995,18 +1995,18 @@ cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *nfa, void *
 	uint32_t *verdict_p = &verdict;
 	uint32_t id = process_packet(qh, nfa, &verdict_p);
 	if (*verdict_p == 0xFFFF) {
-		printf("Got singal to not submit a verdict\n");
-		fflush(stdout);
+		//printf("Got singal to not submit a verdict\n");
+		//fflush(stdout);
 		return 0;
 	}
 	verdict = *verdict_p;
 	if (verdict == NF_DROP) {
-		printf("dropping packet\n");
-		fflush(stdout);
+		//printf("dropping packet\n");
+		//fflush(stdout);
 	}
 	if (verdict == NF_ACCEPT) {
-		printf("accepting packet\n");
-		fflush(stdout);
+		//printf("accepting packet\n");
+		//fflush(stdout);
 	}
 	if (nfq_set_verdict(qh, id, verdict, 0, NULL) < 0) {
 		printf("Verdict error\n");
