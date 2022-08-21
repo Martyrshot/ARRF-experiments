@@ -198,13 +198,13 @@ copy_section(PartialDNSMessage *pm, PackedRR **msgsection, uint16_t sec_len, uin
 				prr->rrid = rrid;
 			}
 			// Sanity check that we aren't overwriting anything we shouldn't.
-			uint16_t blockidx = curidx / (double) BLOCKSIZE;
-			uint16_t lastblockidx = blockidx + ceil(fragsize/(double) BLOCKSIZE);
-			uint16_t totalblocks = ceil(rrfrag->rrsize / (double) BLOCKSIZE);
+			uint16_t blockidx = curidx / (double)BLOCKSIZE;
+			uint16_t lastblockidx = blockidx + ceil(fragsize / (double)BLOCKSIZE);
+			uint16_t totalblocks = ceil(rrfrag->rrsize / (double)BLOCKSIZE);
 			if (prr->block_markers == NULL) {
 				prr->block_markers = malloc(sizeof(int8_t) * totalblocks);
-				for (uint16_t i = 0; i < totalblocks; i++) {
-					prr->block_markers[i] = BLOCKFREE;
+				for (uint16_t j = 0; j < totalblocks; j++) {
+					prr->block_markers[j] = BLOCKFREE;
 				}
 				prr->expected_blocks = totalblocks;
 			}
@@ -217,20 +217,23 @@ copy_section(PartialDNSMessage *pm, PackedRR **msgsection, uint16_t sec_len, uin
 				}
 				prr->rrsize = rrfrag->rrsize;
 			}
-			for (uint16_t i = blockidx; i < lastblockidx; i++) {
-				if (prr->block_markers[i] == BLOCKRECVD) {
+			for (uint16_t j = blockidx; j < lastblockidx; j++) {
+				if (prr->block_markers[j] == BLOCKRECVD) {
 					printf("block wasn't waiting for data\n");
 					ERROR();
 				}
 			}
 			memcpy(prr->bytes + rrfrag->curidx, rrfrag->fragdata, rrfrag->fragsize);
-			for (uint16_t i = blockidx; i < lastblockidx; i++) {
-				prr->block_markers[i] = BLOCKRECVD;
+			for (uint16_t j = blockidx; j < lastblockidx; j++) {
+				prr->block_markers[j] = BLOCKRECVD;
 			}
 			prr->blocks_received += lastblockidx - blockidx;
 			prr->bytes_received += rrfrag->fragsize;
 			if (prr->expected_blocks == prr->blocks_received) {
 				prr->is_complete = true;
+				for (uint16_t j = 0; j < prr->expected_blocks; j++) {
+					assert(prr->block_markers[j] == BLOCKRECVD);
+				}
 				if (section == 0) {
 					// answer section
 					pm->answers_done++;
@@ -673,7 +676,7 @@ internal_send(int fd, unsigned char *bytes, size_t byte_len,
 	}
 	ci->iphdr = malloc(sizeof(struct iphdr));
 	memcpy(ci->iphdr, iphdr, sizeof(struct iphdr));
-	fflush(stdout);
+	//fflush(stdout);
 	uintptr_t test;
 	uint64_t *question_hash_port = malloc(sizeof(uint64_t));
 	memset(question_hash_port, 0, sizeof(uint64_t));
@@ -965,7 +968,7 @@ partial_to_dnsmessage(PartialDNSMessage *in, DNSMessage **out) {
 	}
 	DNSMessage *msg;
 	create_dnsmessage(&msg, in->identification, in->flags, in->qdcount, in->ancount, in->nscount, in->arcount, questions, answers, authoritative, additional);
-	dnsmessage_to_string(msg);
+	//dnsmessage_to_string(msg);
 	*out = msg;
 }
 
@@ -991,20 +994,21 @@ pack_section(PackedRR ***packed_rrfrags, PartialRR **section, uint16_t section_l
 		ssize_t curidx = -1;
 		size_t numblocks = 0;
 		//size_t numblocksrecvdreq = 0;
-		for (size_t i = 0; i < prr->expected_blocks; i++) {
-			if (prr->block_markers[i] == BLOCKFREE
+		for (size_t j = 0; j < prr->expected_blocks; j++) {
+			if (prr->block_markers[j] == BLOCKFREE
 					&& curidx == -1) {
-				curidx = i;
+				curidx = j;
 				numblocks++;
-			} else if (prr->block_markers[i] == BLOCKFREE
+			} else if (prr->block_markers[j] == BLOCKFREE
 					&& curidx != -1) {
 				numblocks++;
 			}
 		}
+		if (curidx == -1) continue;
 		size_t lastblocksize = prr->rrsize % BLOCKSIZE;
 		if (lastblocksize == 0) lastblocksize = BLOCKSIZE;
 
-		size_t canfit = MAXUDP - cursize;
+		size_t canfit = abs(MAXUDP - cursize);
 		size_t numblockscanfit = floor((float)canfit / BLOCKSIZE);
 		
 		if (numblockscanfit >= numblocks) {
@@ -1017,11 +1021,14 @@ pack_section(PackedRR ***packed_rrfrags, PartialRR **section, uint16_t section_l
 				printf("Error making rrfrag for follow up request\n");
 				ERROR();
 			}
-			cursize += ((numblockscanfit - 1) * BLOCKSIZE) + lastblocksize - RRHEADER + RRFRAGHEADER;
+			cursize += ((numblocks - 1) * BLOCKSIZE) + lastblocksize - RRHEADER + RRFRAGHEADER;
 			if (create_packedrr(rrf, rrfrags + _rrfrag_count) != 0) {
 				printf("Error creating packedrr 1\n");
 				fflush(stdout);
 				ERROR();
+			}
+			for (int j = curidx; j < curidx + numblocks; j++) {
+				prr->block_markers[j] = BLOCKWAITING;
 			}
 			_rrfrag_count++;
 		} else if (numblockscanfit > 0) {
@@ -1036,6 +1043,9 @@ pack_section(PackedRR ***packed_rrfrags, PartialRR **section, uint16_t section_l
 				printf("Error creating packedrr 1\n");
 				fflush(stdout);
 				ERROR();
+			}
+			for (int j = curidx; j < curidx + numblockscanfit; j++) {
+				prr->block_markers[j] = BLOCKWAITING;
 			}
 			_rrfrag_count++;
 			*packed_rrfrags = rrfrags;
@@ -1075,8 +1085,8 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 	uint16_t id = msg->identification;
 	PartialDNSMessage *pm;
 	if (!hashmap_get(requester_state, &id, sizeof(uint16_t), (uintptr_t *)&pm)) {
-		printf("Failed to find a pm when we really should have...\n");
-		fflush(stdout);
+		//printf("Failed to find a pm when we really should have...\n");
+		//fflush(stdout);
 		uint16_t *_id = malloc(sizeof(uint16_t));
 		*_id = msg->identification;
 		init_partialdnsmessage(&pm);
@@ -1199,7 +1209,7 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 		printf("Error making DNSMessage asking for more rrfrags\n");
 		ERROR();
 	}
-	dnsmessage_to_string(req_msg);
+	//dnsmessage_to_string(req_msg);
 	int fd;
 	unsigned char *bytes;
 	size_t bytelen;
@@ -1216,6 +1226,8 @@ requester_thread(DNSMessage *msg, struct iphdr *iphdr, void *transport_header, b
 	} else {
 		raw_socket_send(fd, bytes, bytelen, iphdr->daddr, iphdr->saddr, ((struct udphdr *)transport_header)->dest, ((struct udphdr *)transport_header)->source, is_tcp);
 	}
+	free(bytes);
+	close(fd);
 }
 
 void
@@ -1482,7 +1494,7 @@ responding_thread_end(struct iphdr *iphdr, void *transport_hdr, bool is_tcp,
 	fd = -1;
 	unsigned char *msg_bytes;
 	size_t byte_len;
-	dnsmessage_to_string(recvd_msg);
+	//dnsmessage_to_string(recvd_msg);
 	dnsmessage_to_bytes(recvd_msg, &msg_bytes, &byte_len);
 	destroy_dnsmessage(&recvd_msg);
 	create_raw_socket(&fd);
@@ -1494,7 +1506,6 @@ responding_thread_end(struct iphdr *iphdr, void *transport_hdr, bool is_tcp,
 			assert(byte_len <= MAXUDP);
 		}
 		raw_socket_send(fd, msg_bytes, byte_len, iphdr->daddr, iphdr->saddr, ((struct udphdr *)transport_hdr)->dest, ((struct udphdr *)transport_hdr)->source, is_tcp);
-
 	}
 	close(fd);
 }
@@ -1543,11 +1554,11 @@ process_dns_message(struct nfq_q_handle *qh, uint32_t id, unsigned char *payload
 	}
 	if (is_tcp) return NF_ACCEPT;
 	assert(!is_tcp);
-	printf("==========================\n");
-	fflush(stdout);
-	dnsmessage_to_string(msg);
-	printf("==========================\n");
-	fflush(stdout);
+	//printf("==========================\n");
+	//fflush(stdout);
+	//dnsmessage_to_string(msg);
+	//printf("==========================\n");
+	//fflush(stdout);
 	if (is_internal_packet(iphdr)) {
 		size_t outbuff_len = 65355; // Need to account for large messages because of SPHINCS+
 		unsigned char outbuff[outbuff_len];
@@ -1736,8 +1747,8 @@ process_dns_message(struct nfq_q_handle *qh, uint32_t id, unsigned char *payload
 						// this daemon. That might make this section a bit cleaner.
 						// TODO make threaded
 						requester_thread(msg, iphdr, transport_header, is_tcp);
-						return NF_DROP;
 					}
+					return NF_DROP;
 				} else {
 					return NF_DROP;
 					// if we get here, then this is a malicious message and we should drop.
@@ -1770,8 +1781,8 @@ process_tcp(struct nfq_q_handle *qh, uint32_t id, struct iphdr *ipv4hdr, unsigne
 	struct tcphdr *tcphdr = (struct tcphdr *)((char *)payload + sizeof(*ipv4hdr));
 	uint16_t src_port = ntohs(tcphdr->source);
 	uint16_t dst_port = ntohs(tcphdr->dest);
-	printf("tcp: <src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
-	fflush(stdout);
+	//printf("tcp: <src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
+	//fflush(stdout);
 	return NF_ACCEPT;
 	return process_dns_message(qh, id, payload, payloadLen, ipv4hdr, tcphdr, true);
 }
@@ -1781,8 +1792,8 @@ process_udp(struct nfq_q_handle *qh, uint32_t id, struct iphdr *ipv4hdr, unsigne
 	struct udphdr *udphdr = (struct udphdr *)((char *)payload + sizeof(*ipv4hdr));
 	uint16_t src_port = ntohs(udphdr->source);
 	uint16_t dst_port = ntohs(udphdr->dest);
-	printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
-	fflush(stdout);
+	//printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
+	//fflush(stdout);
 	if (BYPASS) {
 		return NF_ACCEPT;
 	}
@@ -1818,7 +1829,7 @@ process_packet(struct nfq_q_handle *qh, struct nfq_data *data, uint32_t **verdic
 			res = process_udp(qh, id, ipv4hdr, payload, payloadLen);
 		} else if (ipv4hdr->protocol == IPPROTO_ICMP) {
 			icmphdr = (struct icmphdr *)((char *)payload + sizeof(*ipv4hdr));
-			printf("<type: %hhu, code: %hhu src: %u dest: %u>\n", icmphdr->type, icmphdr->code, ipv4hdr->saddr, ipv4hdr->daddr);
+			//printf("<type: %hhu, code: %hhu src: %u dest: %u>\n", icmphdr->type, icmphdr->code, ipv4hdr->saddr, ipv4hdr->daddr);
 		} else {
 			res = NF_ACCEPT;
 		}
@@ -1826,7 +1837,7 @@ process_packet(struct nfq_q_handle *qh, struct nfq_data *data, uint32_t **verdic
 		struct udphdr *udphdr = (struct udphdr *)((char *)payload + sizeof(*ipv4hdr));
 		uint16_t src_port = ntohs(udphdr->source);
 		uint16_t dst_port = ntohs(udphdr->dest);
-		printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
+		//printf("<src: %u:%hu, dest: %u:%hu, total size: %lu>\n", ipv4hdr->saddr, src_port, ipv4hdr->daddr, dst_port, payloadLen);
 		res = NF_DROP;
 	} else {
 		printf("Packet type: %hhu\n", ipv4hdr->protocol);
@@ -1852,18 +1863,18 @@ cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *nfa, void *
 	uint32_t *verdict_p = &verdict;
 	uint32_t id = process_packet(qh, nfa, &verdict_p);
 	if (*verdict_p == 0xFFFF) {
-		printf("Got singal to not submit a verdict\n");
-		fflush(stdout);
+		//printf("Got singal to not submit a verdict\n");
+		//fflush(stdout);
 		return 0;
 	}
 	verdict = *verdict_p;
 	if (verdict == NF_DROP) {
-		printf("dropping packet\n");
-		fflush(stdout);
+		//printf("dropping packet\n");
+		//fflush(stdout);
 	}
 	if (verdict == NF_ACCEPT) {
-		printf("accepting packet\n");
-		fflush(stdout);
+		//printf("accepting packet\n");
+		//fflush(stdout);
 	}
 	if (nfq_set_verdict(qh, id, verdict, 0, NULL) < 0) {
 		printf("Verdict error\n");
@@ -1955,6 +1966,7 @@ main(int argc, char **argv) {
 	int fd;
 	/* get this machine's ip address from ioctl */
 	if (get_addr(ipaddr) != 0) return -1;
+	printf("our addr: %u\n", our_addr);
 	/* Create and initialize handle for netfilter_queue */
 	struct nfq_handle *h = nfq_open();
 	init_shared_map(&responder_cache);
@@ -1979,8 +1991,8 @@ main(int argc, char **argv) {
 		return -1;
 	}
 	fd = nfq_fd(h);
-	printf("Listening...\n");
-	fflush(stdout);
+	//printf("Listening...\n");
+	//fflush(stdout);
 	for(;;) {
 		int rv;
 		struct pollfd ufd;
