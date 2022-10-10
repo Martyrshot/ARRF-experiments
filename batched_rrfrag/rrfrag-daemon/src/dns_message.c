@@ -359,20 +359,16 @@ dnsmessage_to_bytes(DNSMessage *in, unsigned char **out, size_t *out_len) {
 	for (size_t i = 0; i < in->qdcount; i++) {
 		total_bytes_needed += question_byte_lens[i];
 	}
-	//printf("total_bytes_needed 1: %lu\n", total_bytes_needed);
 	for (size_t i = 0; i < in->ancount; i++) {
 		total_bytes_needed += answer_byte_lens[i];
 	}
-	//printf("total_bytes_needed 2: %lu\n", total_bytes_needed);
 	for (size_t i = 0; i < in->nscount; i++) {
 		total_bytes_needed += authoritative_byte_lens[i];
 	}
-	//printf("total_bytes_needed 3: %lu\n", total_bytes_needed);
 	for (size_t i = 0; i < in->arcount; i++) {
 		total_bytes_needed += additional_byte_lens[i];
 		printf("additional add: %lu\n", additional_byte_lens[i]);
 	}
-	//printf("total_bytes_needed 4: %lu\n", total_bytes_needed);
 	*out = malloc(sizeof(unsigned char) * total_bytes_needed);
 	if (*out == NULL) {
 		rc = -1;
@@ -492,7 +488,6 @@ char *
 dnsmessage_to_string(DNSMessage *in) {
 	if (in == NULL) return "";
 	char **substrings = malloc(sizeof(char *) * (1 + 1 + in->qdcount + in->ancount + in->nscount + in->arcount));
-	// TODO get identifiers and flags. Don't want to deal with it right now
 	printf("DNS MESSAGE: id: %hu, flags: ", ntohs(in->identification));
 	uint16_t tmp = in->flags;
 	uint16_t mask = 1 << 15;
