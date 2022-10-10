@@ -1,15 +1,15 @@
 # OQS-bind test network
-This repo contains a python script, and some template files, which creates a test DNS. Currently all repos that bind, liboqs, and OQS-OpenSSL are pulled from are hard coded. This should be changed in the future. Docker is required.
+This repo contains code for testing and evaluating both a sequential and batched versions of RRFrag daemons and the ARRF protocol. Test DNS networks are constructed using Docker and network conditions are set by the `./set_network_conditions.bash` script.
 
 
 ## Instructions
 ### Building the system
-To run the test DNS, navigate to the root of this repo, and run `python3 build_docker_compose.py`, which creates a directory `build/`. Navigate to the newly created `build/` directory, and run `docker-compose build`. 
+To run the experiments, first copy the source code for either the batched or sequential directories into the `rrfrag-daemon/` directory. Then run `python3 build_docker_compose.py --maxudp UDPSIZE --alg ALGNAME [--bypass]`. `--bypass` should be used when running the experiments without the RRFrag daemon. `--maxudp` and `--alg` must always be specified. Currently we support the `FALCON512`, `DILITHIUM2`, `SPHINCS+-SHA256-128S`, `RSASHA256`, and `ECDSA256`.
+
+Now navigate to `build` and use `docker compose build` to finish building the network. 
 
 ### Running the network
-You'll need either multiple terminal windows, or a terminal multiplexer (I like tmux) in order to interact with the various docker containers that get launched.
-
-Once the network is built, you'll be able to launch it with `docker-compose up` when inside the `build/` directory. Once all of the instances have `started`, you can attach to any of them by using `docker exec -it <CONTAINER_NAME> bash`.
+Once the network is built, navigate back to the root directory and run the `run_scenarios.bash` to start running the experiemnts.  Once all of the containers are a particular experiment are running, you can attach to any of them by using `docker exec -it <CONTAINER_NAME> bash`.
 
 ### Configuring a custom network
 The build script is fairly naive, so it requires that you write your own configure file (named.conf) for each zone. The build script does not sanity check if the zone configureation file makes sense, or if it's even syntactically correct.
