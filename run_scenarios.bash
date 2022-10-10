@@ -1,8 +1,8 @@
 #! /bin/bash
 
-export OUTPUTDIR="$(pwd)/x86_res/no-daemon/10ms_50mbps"
-export UDPSIZES="stock"
-export ALGS="RSASHA256 ECDSA256"
+export OUTPUTDIR="$(pwd)/x86_res/sequential/100ms_50mbps"
+export UDPSIZES="1232"
+export ALGS="FALCON512"
 export BUILDDIR="$(pwd)/build"
 export WORKINGDIR="$(pwd)"
 mkdir -p $OUTPUTDIR
