@@ -66,8 +66,6 @@ bytes_to_rrfrag(unsigned char *in, size_t in_len, size_t *bytes_processed, bool 
 	}
 	name_byte_len += 1;
 	assert(name_byte_len == 1);
-	//rc = bytes_to_dnsname(cur_pos, &name, &name_len, bytes_processed, name_byte_len);
-	//if (rc != 0) goto end;
 	*bytes_processed = 1;
 	res->name = ".";
 
@@ -126,11 +124,6 @@ int rrfrag_to_bytes(RRFrag *in, unsigned char **out, size_t *out_len) {
 
 
 	assert(in->type == RRFRAG);
-	//rc = dnsname_to_bytes(in->name, strlen(in->name), &name, &name_len);
-	//if (rc != 0) {
-	//	rc = -1;
-	//	goto end;
-	//}
 	*out_len = 0;
 	if (in->fragdata != NULL) {
 		bytes = malloc(1 + 2 + 2 + 4 + 4 + 2 + in->fragsize);
@@ -171,7 +164,6 @@ int rrfrag_to_bytes(RRFrag *in, unsigned char **out, size_t *out_len) {
 	}	
 	*out_len += 1 + 2 + 2 + 4 + 4 + 2;
 	*out = bytes;
-	//printf("!=!=!= outlen: %lu\n", *out_len);
 	return 0;
 }
 

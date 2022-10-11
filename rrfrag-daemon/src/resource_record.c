@@ -24,7 +24,7 @@ bytes_to_dnsname(unsigned char *in, char **name, size_t *name_len, size_t *bytes
 		label_len = in[i];
 		if (label_len + i > in_len) {
 			free(tmp_name);
-			// must be a pointer... which I don't support right now.
+			// Is a pointer name, so fill our struct with a human readable name
 			int j = 0;
 			while(in[j] != 0) j++;
 			*name = malloc(strlen("POINTER NAME") + 1);
@@ -44,7 +44,6 @@ bytes_to_dnsname(unsigned char *in, char **name, size_t *name_len, size_t *bytes
 		return -1;
 	}
 	if (i == 0) {
-	//if (i == 0 && in_len == 1) {
 		tmp_name[i] = '.';
 	} else if ((in_len - i) != 0) {
 		_name = tmp_name;
@@ -78,7 +77,6 @@ dnsname_to_bytes(char *name, size_t name_len, unsigned char **out, size_t *out_l
 		size_t j = i;
 		while (j < name_len) {
 			if (name[j] == '.') {
-			//if (name[j] == '.' || name[j] == 0) {
 				break;
 			}
 			j++;
@@ -243,8 +241,6 @@ rr_to_bytes(ResourceRecord *in, unsigned char **out, size_t *out_len) {
 	uint16_t clas = 0;
 	uint32_t ttl = 0;
 	uint16_t rdsize = 0;
-	//rc = dnsname_to_bytes(in->name, strlen(in->name), &name, &name_len);
-	//if (rc != 0) goto end;
 	bytes = malloc(in->name_byte_len + 2 + 2 + 4 + 2 + in->rdsize);
 	if (bytes == NULL) {
 		rc = -1;

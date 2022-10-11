@@ -1,3 +1,0 @@
-$TTL 330
-. NS ns1.root.
-ns1.root. A 172.20.0.3
